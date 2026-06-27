@@ -287,8 +287,8 @@ function calculate(){
 
   // สร้างตาราง
   let html = `<table class="result-table">
-    <tr><th>รายการ</th><th>อัตรา</th><th>จำนวน</th><th>ราคา</th></tr>`;
-  rows.forEach(r => { html += `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td style="text-align:right">${r[3]}</td></tr>`; });
+    <tr><th>รายการ</th><th>ราคา</th></tr>
+  rows.forEach(r => { html += `<tr><td>${r[0]}</td><td style="text-align:right">${r[3]}</td></tr>`; });
 
   if(inquiries.length === 0){
     const perBook = total/copies;
