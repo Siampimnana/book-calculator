@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>คำนวณราคาค่าพิมพ์หนังสือ — สยามพิมพ์นานา</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Sarabun', sans-serif; background: #f0f0f0; color: #1a1a1a; min-height: 100vh; }
+.main { max-width: 860px; margin: 20px auto; padding: 0 12px 40px; }
+.header-box { background: #1a7ab5; color: #fff; padding: 10px 16px; border-radius: 6px 6px 0 0; font-size: 16px; font-weight: 700; margin-bottom: 0; }
+.form-box { background: #fff; border: 1px solid #c0d8e8; border-top: none; border-radius: 0 0 6px 6px; padding: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 0 32px; }
+@media(max-width:600px){ .form-box { grid-template-columns: 1fr; } }
+.field { margin-bottom: 12px; }
+.field label { display: block; font-size: 13px; color: #333; margin-bottom: 4px; }
+.field select, .field input[type=number] { width: 100%; padding: 6px 10px; border: 1px solid #aac8dc; border-radius: 4px; font-size: 14px; font-family: inherit; background: #fff; }
+.radio-row { display: flex; gap: 20px; margin-top: 2px; }
+.radio-row label { display: flex; align-items: center; gap: 5px; font-size: 13px; cursor: pointer; font-weight: normal; }
+.divider { grid-column: 1/-1; border: none; border-top: 1px dashed #ccc; margin: 4px 0 10px; }
+.btn-row { grid-column: 1/-1; display: flex; gap: 10px; margin-top: 6px; }
+.btn-calc { padding: 10px 28px; background: #8dc63f; color: #fff; border: none; border-radius: 4px; font-size: 15px; font-family: inherit; font-weight: 700; cursor: pointer; }
+.btn-calc:hover { background: #7ab035; }
+.btn-clear { padding: 10px 20px; background: #bbb; color: #fff; border: none; border-radius: 4px; font-size: 14px; font-family: inherit; cursor: pointer; }
+
+/* result */
+.result-box { background: #fff; border: 1px solid #c0d8e8; border-radius: 6px; margin-top: 16px; }
+.result-header { background: #1a7ab5; color: #fff; padding: 8px 16px; border-radius: 6px 6px 0 0; font-size: 14px; font-weight: 700; }
+.result-inner { padding: 16px; }
+.result-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.result-table th { background: #2c3e6b; color: #fff; padding: 7px 10px; text-align: left; }
+.result-table td { padding: 7px 10px; border-bottom: 1px solid #e8eef4; }
+.result-table tr:last-child td { border-bottom: none; }
+.result-table tr:nth-child(even) td { background: #f5f9fc; }
+.total-row td { font-weight: 700; background: #e8f4fc !important; font-size: 14px; }
+.grand-row td { font-weight: 700; background: #1a7ab5 !important; color: #fff; font-size: 16px; }
+.per-book-row td { background: #eaf7e0 !important; color: #3a7a00; font-weight: 600; }
+.note { font-size: 11px; color: #888; margin-top: 10px; background: #fffbeb; border: 1px solid #fcd34d; border-radius: 4px; padding: 8px 12px; }
+.inquiry { color: #c0392b; font-weight: 600; }
+.placeholder { color: #aaa; font-size: 13px; text-align: center; padding: 30px; }
+</style>
+</head>
+<body>
+<div class="main">
+  <div class="header-box">คำนวณราคาค่าพิมพ์หนังสือ</div>
+  <div class="form-box">
+
+    <!-- คอลัมน์ซ้าย -->
+    <div>
+      <div class="field">
+        <label>หนังสือขนาด</label>
+        <select id="bookSize" onchange="calculate()">
+          <option value="a4">A4  ขนาด 21 × 29.7 cm</option>
+          <option value="b5">B5  ขนาด 18.2 × 25.7 cm</option>
+          <option value="a5" selected>A5  ขนาด 14.8 × 21 cm</option>
+          <option value="a3">A3  ขนาด 29.7 × 42 cm</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>จำนวนหน้าทั้งหมด (ไม่รวมปก)</label>
+        <input type="number" id="totalPages" value="" min="4" step="2" placeholder="จำนวนหน้า" oninput="calculate()" />
+      </div>
+
+      <div class="field">
+        <label>พิมพ์ขาว-ดำ 🖤 &nbsp; <span style="color:#888;font-weight:normal">หน้า</span></label>
+        <input type="number" id="bwPages" value="0" min="0" step="2" oninput="calculate()" />
+      </div>
+
+      <div class="field">
+        <label>กระดาษ (ขาว-ดำ)</label>
+        <select id="bwPaper" onchange="calculate()">
+          <option value="bond">ปอนด์ 70 แกรม</option>
+          <option value="eyecare">กระดาษถนอมสายตา</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>การพิมพ์ขาว-ดำ</label>
+        <div class="radio-row">
+          <label><input type="radio" name="bwSide" value="double" checked onchange="calculate()"> พิมพ์หน้า-หลัง</label>
+          <label><input type="radio" name="bwSide" value="single" onchange="calculate()"> พิมพ์หน้าเดียว</label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>พิมพ์ 4 สี 🎨 &nbsp; <span style="color:#888;font-weight:normal">หน้า</span></label>
+        <input type="number" id="colorPages" value="0" min="0" step="2" oninput="calculate()" />
+      </div>
+
+      <div class="field">
+        <label>กระดาษ (4 สี)</label>
+        <select id="colorPaper" onchange="calculate()">
+          <option value="bond">ปอนด์ 70 แกรม</option>
+          <option value="art">อาร์ต มัน/ด้าน (สอบถามราคา)</option>
+          <option value="eyecare">กระดาษถนอมสายตา</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>การพิมพ์สี</label>
+        <div class="radio-row">
+          <label><input type="radio" name="colorSide" value="double" checked onchange="calculate()"> พิมพ์หน้า-หลัง</label>
+          <label><input type="radio" name="colorSide" value="single" onchange="calculate()"> พิมพ์หน้าเดียว</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- คอลัมน์ขวา -->
+    <div>
+      <div class="field">
+        <label>จำนวนเล่ม</label>
+        <input type="number" id="copies" value="1" min="1" oninput="calculate()" />
+      </div>
+
+      <div class="field">
+        <label>ประเภทปกหนังสือ</label>
+        <select id="coverType" onchange="calculate()">
+          <option value="color4_1">4 สี (1 ด้าน)</option>
+          <option value="color4_2">4 สี (2 ด้าน)</option>
+          <option value="bw">ขาว-ดำ</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>กระดาษปก</label>
+        <select id="coverPaper" onchange="calculate()">
+          <option value="art250">อาร์ต 250 แกรม</option>
+          <option value="art300">อาร์ต 300 แกรม</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>การเคลือบปก</label>
+        <select id="laminate" onchange="calculate()">
+          <option value="none">ไม่เคลือบ</option>
+          <option value="gloss">เคลือบ PVC มัน</option>
+          <option value="matt">เคลือบ PVC ด้าน</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>วิธีการเข้าเล่ม</label>
+        <select id="binding" onchange="calculate()">
+          <option value="perfect">ใสสันกาว</option>
+          <option value="saddle">เย็บกลาง/เย็บมุมหลังคา</option>
+          <option value="spiral">สันห่วง/ขดลวด (สอบถาม)</option>
+        </select>
+      </div>
+
+      <hr class="divider">
+
+      <div class="btn-row">
+        <button class="btn-calc" onclick="calculate()">คำนวณราคา</button>
+        <button class="btn-clear" onclick="clearForm()">ลบข้อมูล</button>
+      </div>
+    </div>
+
+  </div><!-- end form-box -->
+
+  <!-- ผลลัพธ์ -->
+  <div class="result-box">
+    <div class="result-header">กรุณาระบุข้อมูลหนังสือ</div>
+    <div class="result-inner">
+      <div id="result-content" class="placeholder">กรอกข้อมูลด้านบนแล้วกด "คำนวณราคา"</div>
+    </div>
+  </div>
+
+</div><!-- end main -->
+
+<script>
+// ราคา/หน้า (ไม่บวก%)
+const innerPrices = {
+  a4: {
+    bw_bond_double:0.65, bw_bond_single:1.00,
+    bw_eyecare_double:1.00, bw_eyecare_single:1.50,
+    color_bond_double:15.00, color_bond_single:20.00,
+    color_art_double:-1, color_art_single:-1,
+    color_eyecare_double:18.00, color_eyecare_single:22.00,
+  },
+  b5: {
+    bw_bond_double:0.65, bw_bond_single:1.00,
+    bw_eyecare_double:1.00, bw_eyecare_single:1.50,
+    color_bond_double:15.00, color_bond_single:20.00,
+    color_art_double:-1, color_art_single:-1,
+    color_eyecare_double:18.00, color_eyecare_single:22.00,
+  },
+  a5: {
+    bw_bond_double:0.50, bw_bond_single:0.95,
+    bw_eyecare_double:0.95, bw_eyecare_single:1.40,
+    color_bond_double:10.00, color_bond_single:15.00,
+    color_art_double:-1, color_art_single:-1,
+    color_eyecare_double:12.00, color_eyecare_single:16.00,
+  },
+  a3: {
+    bw_bond_double:1.30, bw_bond_single:2.00,
+    bw_eyecare_double:2.00, bw_eyecare_single:3.00,
+    color_bond_double:30.00, color_bond_single:40.00,
+    color_art_double:-1, color_art_single:-1,
+    color_eyecare_double:36.00, color_eyecare_single:44.00,
+  }
+};
+
+const coverPrices = {
+  a4:{ color4_1:30, color4_2:50, bw:20 },
+  b5:{ color4_1:30, color4_2:50, bw:20 },
+  a5:{ color4_1:25, color4_2:40, bw:15 },
+  a3:{ color4_1:40, color4_2:65, bw:30 },
+};
+
+const laminatePrices = {
+  a4:{ none:0, gloss:15, matt:15 },
+  b5:{ none:0, gloss:15, matt:15 },
+  a5:{ none:0, gloss:12, matt:12 },
+  a3:{ none:0, gloss:20, matt:20 },
+};
+
+const bindingPrices = {
+  a4:{ perfect:20, saddle:5, spiral:-1 },
+  b5:{ perfect:20, saddle:5, spiral:-1 },
+  a5:{ perfect:15, saddle:5, spiral:-1 },
+  a3:{ perfect:25, saddle:5, spiral:-1 },
+};
+
+function getRadio(name){ return document.querySelector(`input[name="${name}"]:checked`)?.value||'double'; }
+
+function calculate(){
+  const size = document.getElementById('bookSize').value;
+  const bwPages = parseInt(document.getElementById('bwPages').value)||0;
+  const colorPages = parseInt(document.getElementById('colorPages').value)||0;
+  const bwPaper = document.getElementById('bwPaper').value;
+  const colorPaper = document.getElementById('colorPaper').value;
+  const bwSide = getRadio('bwSide');
+  const colorSide = getRadio('colorSide');
+  const copies = parseInt(document.getElementById('copies').value)||1;
+  const coverType = document.getElementById('coverType').value;
+  const laminate = document.getElementById('laminate').value;
+  const binding = document.getElementById('binding').value;
+
+  const P = innerPrices[size];
+  let rows = [], total = 0, inquiries = [];
+
+  // เนื้อในขาวดำ
+  if(bwPages > 0){
+    const key = `bw_${bwPaper}_${bwSide}`;
+    const rate = P[key]||0;
+    const cost = bwPages * rate * copies;
+    total += cost;
+    rows.push([`เนื้อในขาว-ดำ ${bwPages} หน้า (${bwSide==='double'?'หน้า-หลัง':'หน้าเดียว'})`, `${rate} ฿/หน้า`, `${copies} เล่ม`, `${cost.toLocaleString()} ฿`]);
+  }
+
+  // เนื้อใน 4 สี
+  if(colorPages > 0){
+    const key = `color_${colorPaper}_${colorSide}`;
+    const rate = P[key]||0;
+    if(rate === -1){
+      inquiries.push('กระดาษอาร์ต 4 สี — ราคาขึ้นอยู่กับแกรม กรุณาติดต่อเจ้าหน้าที่');
+      rows.push([`เนื้อใน 4 สี ${colorPages} หน้า`, `สอบถาม`, `${copies} เล่ม`, `<span class="inquiry">สอบถาม</span>`]);
+    } else {
+      const cost = colorPages * rate * copies;
+      total += cost;
+      rows.push([`เนื้อใน 4 สี ${colorPages} หน้า (${colorSide==='double'?'หน้า-หลัง':'หน้าเดียว'})`, `${rate} ฿/หน้า`, `${copies} เล่ม`, `${cost.toLocaleString()} ฿`]);
+    }
+  }
+
+  // ปก
+  const coverCost = (coverPrices[size]?.[coverType]||0) * copies;
+  const coverNames = {color4_1:'4 สี (1 ด้าน)',color4_2:'4 สี (2 ด้าน)',bw:'ขาว-ดำ'};
+  total += coverCost;
+  rows.push([`ปก ${coverNames[coverType]}`, `${coverPrices[size]?.[coverType]||0} ฿/เล่ม`, `${copies} เล่ม`, `${coverCost.toLocaleString()} ฿`]);
+
+  // เคลือบ
+  const laminateCost = (laminatePrices[size]?.[laminate]||0) * copies;
+  const laminateNames = {none:'ไม่เคลือบ',gloss:'เคลือบ PVC มัน',matt:'เคลือบ PVC ด้าน'};
+  if(laminateCost > 0){ total += laminateCost; rows.push([laminateNames[laminate], `${laminatePrices[size]?.[laminate]} ฿/เล่ม`, `${copies} เล่ม`, `${laminateCost.toLocaleString()} ฿`]); }
+
+  // เข้าเล่ม
+  const bindRate = bindingPrices[size]?.[binding]||0;
+  const bindingNames = {perfect:'ใสสันกาว',saddle:'เย็บกลาง/เย็บมุม',spiral:'สันห่วง/ขดลวด'};
+  if(bindRate === -1){
+    inquiries.push('สันห่วง/ขดลวด — ราคาขึ้นอยู่กับจำนวนหน้า กรุณาติดต่อเจ้าหน้าที่');
+    rows.push([bindingNames[binding], 'สอบถาม', `${copies} เล่ม`, `<span class="inquiry">สอบถาม</span>`]);
+  } else if(bindRate > 0){
+    const bindCost = bindRate * copies;
+    total += bindCost;
+    rows.push([bindingNames[binding], `${bindRate} ฿/เล่ม`, `${copies} เล่ม`, `${bindCost.toLocaleString()} ฿`]);
+  }
+
+  // สร้างตาราง
+  let html = `<table class="result-table">
+    <tr><th>รายการ</th><th>อัตรา</th><th>จำนวน</th><th>ราคา</th></tr>`;
+  rows.forEach(r => { html += `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td style="text-align:right">${r[3]}</td></tr>`; });
+
+  if(inquiries.length === 0){
+    const perBook = total/copies;
+    html += `<tr class="total-row"><td colspan="3">รวมทั้งหมด ${copies} เล่ม</td><td style="text-align:right">${total.toLocaleString()} ฿</td></tr>`;
+    html += `<tr class="per-book-row"><td colspan="3">ราคาต่อเล่ม</td><td style="text-align:right">${perBook.toFixed(2)} ฿/เล่ม</td></tr>`;
+  } else {
+    html += `<tr class="total-row"><td colspan="3">ราคารวม</td><td style="text-align:right"><span class="inquiry">ไม่สามารถคำนวณได้</span></td></tr>`;
+  }
+  html += `</table>`;
+
+  inquiries.forEach(i => { html += `<div class="note">⚠️ ${i}</div>`; });
+  html += `<div class="note">⚠️ ราคาเบื้องต้น ยังไม่รวม VAT และค่าจัดส่ง กรุณายืนยันราคาจริงกับเจ้าหน้าที่ก่อนสั่งพิมพ์</div>`;
+
+  document.querySelector('.result-header').textContent = `ผลการคำนวณราคาพิมพ์หนังสือ — ${({a4:'A4',b5:'B5',a5:'A5',a3:'A3'})[size]} จำนวน ${copies} เล่ม`;
+  document.getElementById('result-content').innerHTML = html;
+}
+
+function clearForm(){
+  document.getElementById('totalPages').value='';
+  document.getElementById('bwPages').value=0;
+  document.getElementById('colorPages').value=0;
+  document.getElementById('copies').value=1;
+  document.querySelector('.result-header').textContent='กรุณาระบุข้อมูลหนังสือ';
+  document.getElementById('result-content').innerHTML='<div class="placeholder">กรอกข้อมูลด้านบนแล้วกด "คำนวณราคา"</div>';
+}
+</script>
+</body>
+</html>
